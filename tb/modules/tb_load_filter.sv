@@ -11,6 +11,47 @@
 `default_nettype none
 `timescale 1ns/1ps
 
+function automatic bit [31:0] golden_model (
+    logic [2:0]  f3,
+    logic [31:0] ram_data,
+    logic [1:0]  byte_offset
+);
+    logic [31:0] temp;
+    logic [7:0]  raw_byte;
+    logic [15:0] raw_half;
+
+    temp = ram_data >> (byte_offset * 8);
+    raw_byte = temp[7:0];
+    raw_half = temp[15:0];
+
+    case(f3)
+
+        3'b010: return ram_data;
+        3'b100: return (temp & 32'h000000FF);
+        3'b101: return (temp & 32'h0000FFFF);
+        
+
+        3'b000: begin
+
+            if (raw_byte[7] == 1'b1) return {24'hFFFFFF, raw_byte};
+
+            else return {24'h000000, raw_byte};
+        end
+        
+        3'b001: begin
+
+            if (raw_half[15] == 1'b1) return {16'hFFFF, raw_half};
+
+            else return {16'h0000, raw_half};
+        end
+        
+        default: return 32'b0;
+
+    endcase
+endfunction
+
+
+
 module tb_load_filter;
 
     logic [2:0]  func3;
@@ -18,6 +59,10 @@ module tb_load_filter;
     logic [1:0]  byte_offset;
 
     logic [31:0] filtered_data;
+
+    
+
+
 
     load_filter dut (
         .func3(func3),
@@ -27,6 +72,10 @@ module tb_load_filter;
     );
 
     initial begin
+
+        bit [31:0] expected_out;
+
+
         // output files setup
         $dumpfile("tb_load_filter.vcd");
         $dumpvars(0, tb_load_filter);
@@ -35,9 +84,48 @@ module tb_load_filter;
         func3 = 3'd0;
         ram_data = 32'd0;
         byte_offset = 2'd0;
+
         #20;
 
         $display("Starting Load Filter tests...");
+
+        $display("CRT Tests:");
+
+
+        //CRT 10000 tests
+
+        for (int i = 0; i < 10000; i++) begin
+
+            func3 = $urandom_range(0, 7);
+            ram_data = $urandom();
+            byte_offset = $urandom_range(0, 3);
+
+            expected_out = golden_model(func3, ram_data, byte_offset);
+
+            #10;
+
+            assert (filtered_data == expected_out) begin
+
+                if ((i + 1) % 1000 == 0) begin
+                    $display("CRT test %0d / 10000 passed", i+1);
+                end
+            end
+
+            else begin
+                $fatal(1, "CRT test %0d failed. Func3: %0b, RAM Data: %0h, Offset: %0d, Expected: %0h, Got: %0h", 
+                i+1, func3, ram_data, byte_offset, filtered_data, expected_out);
+
+            end
+
+
+
+        end
+
+        //DIRECTED TESTS
+
+        #100;
+
+        $display("Directed Tests:");
 
         // test 1: lw
         $display("Test 1: Load Word (LW)");

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.126 (w)1999-2026 BSI
-[*] Thu Jul 16 01:03:49 2026
+[*] Sat Jul 25 04:19:00 2026
 [*]
-[dumpfile] "/mnt/x/project-soliloquy/sim/tb_alu.vcd"
-[dumpfile_mtime] "Thu Jul 16 01:01:24 2026"
-[dumpfile_size] 1007
-[savefile] "/mnt/x/project-soliloquy/sim/tb_alu.gtkw"
-[timestart] 0
+[dumpfile] "/mnt/x/full_implementation/sim/tb_alu.vcd"
+[dumpfile_mtime] "Sat Jul 25 04:18:45 2026"
+[dumpfile_size] 2578132
+[savefile] "/mnt/x/full_implementation/sim/tb_alu.gtkw"
+[timestart] 99796100
 [size] 1583 888
 [pos] -1 -1
-*-14.000000 23590 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.000000 100072000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_alu.
 [sst_width] 297
 [signals_width] 182
@@ -54,7 +54,7 @@ tb_alu.tb_data_1[31:0]
 (29)tb_alu.tb_data_1[31:0]
 (30)tb_alu.tb_data_1[31:0]
 (31)tb_alu.tb_data_1[31:0]
-@1401204
+@1401200
 -group_end
 @24
 tb_alu.tb_data_2[31:0]

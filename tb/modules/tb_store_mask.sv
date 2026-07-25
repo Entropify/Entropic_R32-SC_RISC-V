@@ -11,6 +11,69 @@
 `default_nettype none
 `timescale 1ns/1ps
 
+
+task automatic golden_model (
+    input logic [2:0] f3,
+    input logic [31:0] rs2_data,
+    input logic [1:0] byte_offset,
+    output bit [31:0] expected_data,
+    output bit [3:0] expected_mask 
+);
+
+    logic [7:0] raw_byte = rs2_data[7:0];
+    logic [15:0] raw_half = rs2_data[15:0];
+
+    expected_data = 32'b0;
+    expected_mask = 4'b0000;
+
+    case(f3)
+
+        3'b010: begin // sw
+            expected_mask = 4'b1111;
+            expected_data = rs2_data;
+        end
+
+        3'b000: begin // sb lut
+
+            case (byte_offset)
+                2'd0: begin 
+                    expected_mask = 4'b0001; 
+                    expected_data = rs2_data; 
+                end
+                2'd1: begin 
+                    expected_mask = 4'b0010; 
+                    expected_data = {rs2_data[23:0], 8'h00}; 
+                end
+                2'd2: begin 
+                    expected_mask = 4'b0100; 
+                    expected_data = {rs2_data[15:0], 16'h0000}; 
+                end
+                2'd3: begin 
+                    expected_mask = 4'b1000; 
+                    expected_data = {rs2_data[7:0], 24'h000000}; 
+                end
+            endcase
+
+        end
+
+        3'b001: begin // sh lut
+
+            if (byte_offset == 2'd0) begin
+                expected_mask = 4'b0011; 
+                expected_data = rs2_data;
+            end
+
+            else if (byte_offset == 2'd2) begin
+                expected_mask = 4'b1100; 
+                expected_data = {rs2_data[15:0], 16'h0000};
+            end
+
+        end
+
+    endcase
+
+endtask
+
 module tb_store_mask;
 
     logic [31:0] write_data_in;
@@ -29,6 +92,10 @@ module tb_store_mask;
     );
 
     initial begin
+
+        bit [31:0] expected_data;
+        bit [3:0] expected_mask;
+
         // output files setup
         $dumpfile("tb_store_mask.vcd");
         $dumpvars(0, tb_store_mask);
@@ -40,6 +107,41 @@ module tb_store_mask;
         #20;
 
         $display("Starting Store Mask tests...");
+
+        $display("CRT Tests:");
+
+        for (int i = 0; i < 10000; i++) begin
+
+            write_data_in = $urandom();
+            func3 = $urandom_range(0, 7);
+            byte_offset = $urandom_range(0, 3);
+
+            golden_model(func3, write_data_in, byte_offset, expected_data, expected_mask);
+
+            #10;
+
+            assert ((expected_data == masked_data_out) && (expected_mask == write_mask_out)) begin
+
+                if ((i + 1) % 1000 == 0) begin
+                    $display("CRT test %0d / 10000 passed", i+1);
+                end
+
+            end
+
+            else begin
+
+                $fatal(1, "CRT test %0d failed. Func3: %0b, Write Data: %0h, Offset: %0d, Expected Write: %0h, Got Write: %0h, Expected Mask: %0b, Got Mask: %0b",
+                i+1, func3, write_data_in, byte_offset, expected_data, masked_data_out, expected_mask, write_mask_out);
+
+            end
+
+
+        end
+
+
+        #100;
+
+        $display("Directed Tests:");
 
         // test 1: sw
         $display("Test 1: Store Word (SW)");
@@ -115,7 +217,7 @@ module tb_store_mask;
         
 
         // test 7: invalid func3
-        $display("Test 6: Invalid func3");
+        $display("Test 7: Invalid func3");
         func3 = 3'b111;
         byte_offset = 2'b01;
         write_data_in = 32'h000000CC; 
@@ -127,7 +229,7 @@ module tb_store_mask;
         end
 
         // test 8: invalid half word alignment
-        $display("Test 6: Invalid Half Word Alignment");
+        $display("Test 8: Invalid Half Word Alignment");
         func3 = 3'b001;
         byte_offset = 2'b01;
         write_data_in = 32'h0000DEAD; 

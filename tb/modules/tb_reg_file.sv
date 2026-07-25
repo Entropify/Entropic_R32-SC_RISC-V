@@ -14,6 +14,8 @@
 `timescale 1ns/1ps
 
 
+
+
 module tb_reg_file;
 
     logic clk;
@@ -50,6 +52,26 @@ module tb_reg_file;
 
     initial begin
 
+        //shadow mem reset
+
+        logic [31:0] shadow_mem [0:31];
+        logic [31:0] expected_val;
+        logic [31:0] exp_rd;
+
+        logic [4:0] rd_rn;
+
+        logic [31:0] write_rn;
+
+        //for readback over random amount of cycles because this tb not random enough >:)
+
+        logic [6:0] cycle_count;
+
+        for (int i = 0; i < 32; i++) begin
+            shadow_mem[i] = 32'd0;
+        end
+
+        
+
 
         //output files setup
 
@@ -77,7 +99,82 @@ module tb_reg_file;
 
         $display("Starting reg file tests...");
 
+        $display("CRT Tests:");
 
+
+        //CRT 10000 tests
+
+        for (int i = 0; i < 1000; i++) begin
+
+            /*
+            basically this writes a data in on reg, remembers it, then fills the rest with random crap 
+            and sees if that one reg retained the value stably. aka torturing flip flops >:)
+            */
+
+            cycle_count = $urandom_range(0, 100);
+
+            rs1_address = $urandom_range(0, 31);
+            rs2_address = $urandom_range(0, 31);
+            rd_address = $urandom_range(0, 31);
+            write_data = $urandom();
+            reg_write = 1'b1;
+
+            write_rn = write_data;
+
+            rd_rn = rd_address;
+
+
+            @(posedge clk);
+            #1;
+
+            expected_val = (rd_rn == 5'd0) ? 32'd0 : write_rn;
+
+
+
+            for (int j = 0; j < cycle_count; j++) begin
+
+
+                rs1_address = $urandom_range(0, 31);
+                rs2_address = $urandom_range(0, 31);
+
+                rd_address = $urandom_range(0, 31);
+
+                while (rd_address == rd_rn) begin
+                    rd_address = $urandom_range(0, 31);
+                end
+
+                write_data = $urandom();
+                reg_write = $urandom_range(0, 1);
+
+                @(posedge clk);
+
+                #1;
+            end
+
+            rs1_address = rd_rn;
+            rs2_address = rd_rn;
+
+            @(posedge clk);
+            #1;
+
+            assert ((expected_val == rs1_data) && (expected_val == rs2_data)) begin
+
+                if ((i + 1) % 100 == 0) begin
+                    $display("CRT test %0d / 1000 passed", i+1);
+                end
+
+            end else begin
+
+                $fatal(1, "CRT test %0d, memory retention failed!", i+1);
+
+            end
+
+
+        end
+
+        #100;
+
+        $display("Directed Tests:");
 
 
         //test 1 basic write and read (reg x5)

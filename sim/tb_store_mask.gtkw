@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.126 (w)1999-2026 BSI
-[*] Wed Jul 22 08:10:36 2026
+[*] Sat Jul 25 06:36:10 2026
 [*]
 [dumpfile] "/mnt/x/full_implementation/sim/tb_store_mask.vcd"
-[dumpfile_mtime] "Wed Jul 22 08:10:03 2026"
-[dumpfile_size] 1753
+[dumpfile_mtime] "Sat Jul 25 06:35:50 2026"
+[dumpfile_size] 1965395
 [savefile] "/mnt/x/full_implementation/sim/tb_store_mask.gtkw"
-[timestart] 0
+[timestart] 99759900
 [size] 1838 893
 [pos] -1 -1
-*-14.000000 70530 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.000000 100060700 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_store_mask.
 [sst_width] 297
 [signals_width] 174

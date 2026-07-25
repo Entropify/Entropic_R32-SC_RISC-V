@@ -28,6 +28,9 @@ module tb_imm_gen;
         $dumpfile("tb_imm_gen.vcd");
         $dumpvars(0, tb_imm_gen);
 
+
+        //DIRECT TESTSSSSS
+
         //clearing chip signals
         instruction_in = 32'd0;
         #20;

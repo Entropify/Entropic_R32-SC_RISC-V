@@ -13,6 +13,36 @@
 `default_nettype none
 `timescale 1ns/1ps
 
+function automatic bit golden_model (
+    logic [31:0] d1,
+    logic [31:0] d2,
+    logic [2:0] f3 
+    );
+
+bit result;
+
+case(f3)
+
+        3'b000: result = (d1 == d2);
+
+        3'b001: result = (d1 != d2);
+
+        3'b100: result = ($signed(d1) < $signed(d2));
+
+        3'b101: result = ($signed(d1) >= $signed(d2));
+
+        3'b110: result = (d1 < d2);
+
+        3'b111: result = (d1 >= d2);
+
+        default: result = 1'b0;
+endcase
+
+return result;
+
+
+endfunction
+
 module tb_branch_comp;
 
     logic [31:0] data_1;
@@ -29,6 +59,20 @@ module tb_branch_comp;
     );
 
     initial begin
+
+        bit expected_out;
+
+        logic [2:0] valid_func3 [0:5];
+
+        valid_func3[0] = 3'b000;
+        valid_func3[1] = 3'b001;
+        valid_func3[2] = 3'b100;
+        valid_func3[3] = 3'b101;
+        valid_func3[4] = 3'b110;
+        valid_func3[5] = 3'b111;
+
+        
+
         $dumpfile("tb_branch_comp.vcd");
         $dumpvars(0, tb_branch_comp);
 
@@ -39,15 +83,54 @@ module tb_branch_comp;
 
         $display("Starting Branch Comparator tests...");
 
-        // beq
+        $display("CRT Tests:");
+
+
+        //10000 CRT
+
+        for (int i = 0; i < 10000; i++) begin
+
+            data_1 = $urandom();
+            data_2 = $urandom();
+
+            func_3 = valid_func3[$urandom_range(0, 5)];
+
+            #10;
+
+            expected_out = golden_model(data_1, data_2, func_3);
+
+            assert (take_branch == expected_out) begin
+
+                if ((i + 1) % 1000 == 0) begin
+                    $display("CRT test %0d / 10000 passed", i + 1);
+                end
+
+            end
+
+            else begin
+                $fatal(1, "CRT test %0d failed. Func3: %0b, D1: %0h, D2: %0h, Expected: %0b, Got %0b", 
+                i+1, func_3, data_1, data_2, expected_out, take_branch);
+            end
+
+
+
+        end
+
+        // beq true
         func_3 = 3'b000; 
         data_1 = 32'd10; 
         data_2 = 32'd10; 
-        #10;
+        #100;
+
+        $display("Directed Tests:");
+
         assert(take_branch == 1'b1) $display("Test 1 passed");
             
         else $fatal(1, "BEQ True failed");
         
+
+        // beq false
+
         func_3 = 3'b000; 
         data_1 = 32'd10; 
         data_2 = 32'd20; 

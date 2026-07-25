@@ -19,7 +19,7 @@
  always @(*) begin
 
     
-    shifted_data = rs2_data << (byte_offset * 8);
+    shifted_data = rs2_data << ({byte_offset, 3'b000});
     
     case(func3)
 

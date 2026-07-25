@@ -18,7 +18,7 @@ reg [31:0] shifted_data;
 always @(*) begin
 
     
-    shifted_data = ram_data >> (byte_offset * 8);
+    shifted_data = ram_data >> ({byte_offset, 3'b000});
 
     case(func3)
     
