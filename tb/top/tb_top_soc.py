@@ -160,4 +160,4 @@ async def universal_test(dut):
     dut._log.info(f"Instruction loop detected at: program counter \033[34m{current_pc}\033[0m after \033[34m{cycles}\033[0m cycles.")
 
     dut._log.info("\033[32mTEST SUCCESS :D\033[0m Assembly program passed self checks and verified by python test function")
-    dut._log.info("To view waveform use \033[34mgtkwave sim_build/soc_top.fst soc_top.gtkw\033[0m")
+    dut._log.info("To view waveform use \033[34mgtkwave cocotb_sim/soc_top.fst soc_top.gtkw\033[0m")
