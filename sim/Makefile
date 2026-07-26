@@ -20,6 +20,8 @@ export PYTHONPATH := $(PWD)/../tb/top:$(PYTHONPATH)
 # Force Icarus to dump the waveform file for GTKWave
 export WAVES = 1
 
+SIM_BUILD = cocotb_sim
+
 # Software Compilation Target
 top_tb:
 	# read the source from tb/top/, but spit the binaries into tb/programs/

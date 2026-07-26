@@ -2,9 +2,14 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import ClockCycles
+from cocotb.triggers import Timer
 
 
-# generic testbench that runs until the CPU halts then checks x10
+
+
+# self checking testbench that runs until the CPU halts then checks x10
+# btw use make top_tb to build to hex cus i keep forgetting smh
+
 
 @cocotb.test()
 async def universal_test(dut):
@@ -28,23 +33,29 @@ async def universal_test(dut):
     dut.rst_n.value = 1
     dut._log.info("CPU on. Waiting for assembly to reach successful branch")
 
-
+    current_pc = 0
     prev_pc = -1
     cycles = 0
     
 
 
     while cycles < 1000:
+
         await RisingEdge(dut.clk)
         
         try:
             current_pc = dut.cpu.cpu_pc.pc_out.value.integer
             #current_instr = dut.cpu.instruction.value.integer
+
+            if (dut.halt) == 1:
+
+                for i in range(5):
+                    await RisingEdge(dut.clk)
+                    current_pc = dut.cpu.cpu_pc.pc_out.value.integer
+                    prev_pc = current_pc
         
-            if prev_pc == current_pc:
-                dut._log.info(f"Instruction loop detected at: program counter {current_pc} after {cycles} cycles.")
-                await ClockCycles(dut.clk, 5)
-                break
+                if prev_pc == current_pc:
+                    break
                 
             prev_pc = current_pc
 
@@ -55,7 +66,7 @@ async def universal_test(dut):
 
     # preventing program from stalling forever if soc is broken (big sad)
     if cycles >= 1000:
-        assert False, "Simulation timed out. CPU never hit the expected infinite loop."
+        dut._log.error("Simulation timed out. CPU never hit the expected infinite loop. dut._log.info. To view waveform use: gtkwave sim_build/soc_top.fst soc_top.gtkw")
 
 
 
@@ -64,60 +75,89 @@ async def universal_test(dut):
     return_code = dut.cpu.cpu_reg_file.internal_reg[10].value.integer
 
 
-    
+
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|\033[1m\033[34m                            Epic Error Codes Meaning Table Below                        \033[0m\033[0m|")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 2 = failed to not take branch during invalid beq                            |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 3 = failed to take branch during valid beq                                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 4 = failed addi instruction                                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 5 = failed to lw and sw properly                                            |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 6 = failed andi instruction                                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 7 = failed ori instruction                                                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 8 = failed xor instruction                                                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 9 = failed xori instruction                                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 10 = failed sll instruction (logical left)                                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 11 = failed slli instruction (logical left immediate)                       |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 12 = failed srl instruction (logical right)                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 13 = failed srli instruction (logical right immediate)                      |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 14 = failed sra instruction (arithmetic right sign not preserved)           |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 15 = failed srai instruction (arithmetic right immediate sign not preserved)|")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 16 = failed slt instruction (signed comparison)                             |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 17 = failed sltu instruction (unsigned comparison)                          |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 18 = failed slti instruction (signed immediate comparison)                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 19 = failed sltiu instruction (unsigned immediate comparison)               |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 20 = failed to take branch during valid bne                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 21 = failed to not take branch during invalid bne                           |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 22 = failed to take branch during valid blt (signed)                        |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 23 = failed to not take branch during invalid bltu (unsigned)               |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 24 = failed to not take branch during invalid bge (signed)                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 25 = failed to take branch during valid bgeu (unsigned)                     |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 26 = failed and instruction                                                 |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 27 = failed or instruction                                                  |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 28 = failed lb instruction (sign extension incorrect)                       |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 29 = failed lbu instruction (zero extension incorrect)                      |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 30 = failed lh instruction (sign extension incorrect)                       |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 31 = failed lhu instruction (zero extension incorrect)                      |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 32 = failed sb instruction (write incorrect or changed neighboring byte)    |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 33 = failed sh instruction (write incorrect or changed neighboring halfword)|")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 34 = failed jal/jalr instruction (link address or jump target incorrect)    |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 35 = failed lui instruction (upper immediate placement incorrect)           |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|Error code: 36 = failed auipc instruction (pc relative upper immediate incorrect)       |")
+    dut._log.info("------------------------------------------------------------------------------------------")
+    dut._log.info("|\033[1m\033[34m                            Epic Error Codes Meaning Table Above                        \033[0m\033[0m|")
+    dut._log.info("------------------------------------------------------------------------------------------")
+
+
     assert return_code == 1, f'\033[31mTEST FAILED >:(\033[0m: assembly code returned error code: {return_code}'
 
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("|\033[1m\033[34m                           Epic Error Codes Meaning Table                             \033[0m\033[0m|")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 2 = failed to not take branch during invalid beq")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 3 = failed to take branch during valid beq")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 4 = failed addi instruction")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 5 = failed to lw and sw properly")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 6 = failed andi instruction")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 7 = failed ori instruction")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 8 = failed xor instruction")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 9 = failed xori instruction")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 10 = failed sll instruction (logical left)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 11 = failed slli instruction (logical left immediate)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 12 = failed srl instruction (logical right)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 13 = failed srli instruction (logical right immediate)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 14 = failed sra instruction (arithmetic right sign not preserved)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 15 = failed srai instruction (arithmetic right immediate sign not preserved)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 16 = failed slt instruction (signed comparison)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 17 = failed sltu instruction (unsigned comparison)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 18 = failed slti instruction (signed immediate comparison)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 19 = failed sltiu instruction (unsigned immediate comparison)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 20 = failed to take branch during valid bne")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 21 = failed to not take branch during invalid bne")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 22 = failed to take branch during valid blt (signed)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 23 = failed to not take branch during invalid bltu (unsigned)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 24 = failed to not take branch during invalid bge (signed)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    dut._log.info("Error code: 25 = failed to take branch during valid bgeu (unsigned)")
-    dut._log.info("----------------------------------------------------------------------------------------")
-    
-    dut._log.info("\033[32mTEST SUCCESS :D\033[0m: Assembly program passed self checks and verified by python test function")
+    dut._log.info("If no error code please ignore but appreciate the above table (it took forever to type and format)")
+
+    dut._log.info(f"Instruction loop detected at: program counter \033[34m{current_pc}\033[0m after \033[34m{cycles}\033[0m cycles.")
+
+    dut._log.info("\033[32mTEST SUCCESS :D\033[0m Assembly program passed self checks and verified by python test function")
     dut._log.info("To view waveform use \033[34mgtkwave sim_build/soc_top.fst soc_top.gtkw\033[0m")

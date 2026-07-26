@@ -107,8 +107,9 @@ module tb_reg_file;
         for (int i = 0; i < 1000; i++) begin
 
             /*
-            basically this writes a data in on reg, remembers it, then fills the rest with random crap 
-            and sees if that one reg retained the value stably. aka torturing flip flops >:)
+            basically this writes a data in one reg, remembers it, then fills the rest with 
+            random crap repeated over a random number of clk cycles and sees if that one reg 
+            retained the value stably. aka torturing flip flops >:)
             */
 
             cycle_count = $urandom_range(0, 100);

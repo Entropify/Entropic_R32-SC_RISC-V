@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.126 (w)1999-2026 BSI
-[*] Sun Jul 19 02:31:40 2026
+[*] Sun Jul 26 01:41:01 2026
 [*]
 [dumpfile] "/mnt/x/full_implementation/sim/sim_build/soc_top.fst"
-[dumpfile_mtime] "Sun Jul 19 02:28:51 2026"
-[dumpfile_size] 3094
+[dumpfile_mtime] "Sun Jul 26 01:37:58 2026"
+[dumpfile_size] 5139
 [savefile] "/mnt/x/full_implementation/sim/soc_top.gtkw"
-[timestart] 0
+[timestart] 651500
 [size] 1937 719
 [pos] -1 -1
-*-16.000000 42500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.000000 990000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] soc_top.
 [treeopen] soc_top.cpu.
 [sst_width] 297
@@ -30,7 +30,6 @@ soc_top.instruction[31:0]
 soc_top.mem_read
 soc_top.mem_write
 soc_top.rst_n
-soc_top.cpu.alu_src
 soc_top.cpu.zero_flag
 soc_top.cpu.branch
 soc_top.cpu.take_branch_signal
@@ -48,6 +47,7 @@ soc_top.cpu.writeback_data[31:0]
 soc_top.cpu.reg_write
 soc_top.cpu.mem_write
 soc_top.cpu.mem_read
-soc_top.cpu.mem_to_reg
+@29
+soc_top.cpu.halt
 [pattern_trace] 1
 [pattern_trace] 0

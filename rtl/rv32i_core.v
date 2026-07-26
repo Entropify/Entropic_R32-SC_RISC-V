@@ -9,15 +9,15 @@
     input wire clk,
     input wire rst_n,
 
-    output wire [31:0] instr_address,        // instruction mem i/o
+    output wire [31:0] instr_address,    // instruction mem i/o
     input wire [31:0] instruction,
 
-    output wire [31:0] data_address,         // data mem i/o
+    output wire [31:0] data_address,  // data mem i/o
     output wire [31:0] data_write,
     input wire [31:0] data_read,
     output wire [3:0] write_mask,
 
-    output wire mem_write,                   // control signals
+    output wire mem_write,       // control signals
     output wire mem_read,
 
     output wire halt
@@ -98,7 +98,7 @@
   assign pc_plus_4 = pc_out + 32'd4;
   assign pc_branch_target = pc_out + imm_gen_out;
   assign pc_next = (take_branch || pc_src == 2'b01) ? pc_branch_target : 
-                    (pc_src == 2'b10) ? alu_result : pc_plus_4;
+                    (pc_src == 2'b10) ? {alu_result[31:1], 1'b0} : pc_plus_4;
 
 
 // control unit
