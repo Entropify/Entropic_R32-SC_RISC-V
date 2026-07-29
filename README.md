@@ -58,7 +58,9 @@ The chip features:
 - **Memory Access:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
 - **Writeback:** A 4-to-1 mux selects between ALU result, filtered memory data, `PC+4` (for `jal`/`jalr` link), and the immediate (for `lui`), based on `mem_to_reg`
 
-Everything happens within a single clock cycle. There's no pipelining (yet!) and all the hassle that comes with that. The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
+Everything happens within a single clock cycle. There's no pipelining (yet!) and all the hassle that comes with that. 
+
+The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
 
 ---
 
