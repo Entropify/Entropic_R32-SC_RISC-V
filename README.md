@@ -180,13 +180,9 @@ Initially, the design ran into a couple issues I had to manually debug during th
 - Antenna rule violations were resolved by setting `DIODE_INSERTION_STRATEGY` to a value of 3 (OpenROAD Antenna Avoidance Flow, which auto-inserts protection diodes during routing).
 - Max slew / max cap violations caused by a high-fanout net. I traced a specific problematic net (_00997_) through the synthesized netlist to its source: the instruction[19] bit (part of the rs1 field) fanning out to 115 flip-flop inputs across the register file's address decode. This is partially alleviated via changing the `SYNTH_MAX_FANOUT` variable but not fully resolved yet. I think a full resolution of this in the future would require architecturally reworking the register file addressing logic by adding buffers.
 
-### GDS Render:
+### GDS Renders:
 
-<img width="2557" height="1437" alt="Screenshot 2026-07-28 225719" src="https://github.com/user-attachments/assets/da7afc6a-dab7-48a9-8336-674ec5ae6333" />
-
-**To-scale comparison with my previous project just for fun :)**
-
-<img width="1975" height="1360" alt="chip comparison pic" src="https://github.com/user-attachments/assets/d1d90501-1342-4f46-bd63-779a38494bcc" />
+<img width="2557" height="1437" alt="Screenshot 2026-07-28 225719" src="https://github.com/user-attachments/assets/da7afc6a-dab7-48a9-8336-674ec5ae6333" /> <img width="2557" height="1437" alt="Screenshot 2026-07-29 014316" src="https://github.com/user-attachments/assets/33b3c854-9752-410c-927a-cedfee62a490" />
 
 
 ### Cell breakdown:
@@ -249,6 +245,12 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 - [ ] Compiled C program (via RISC-V GCC) run end-to-end as an integration demo
 - [ ] FPGA implementation on a AMD Xilinx Artix-7, eventually building toward a VGA-driven SoC
 - [ ] Revisit synthesis fanout / slew / critical path optimization at the RTL level
+
+---
+
+**To-scale comparison with my previous project just for fun :)**
+
+<img width="1975" height="1360" alt="chip comparison pic" src="https://github.com/user-attachments/assets/d1d90501-1342-4f46-bd63-779a38494bcc" /> 
 
 ---
 
