@@ -23,7 +23,7 @@
 - **fully verified** through **self-written testbenches** in **SystemVerilog** and **RISC-V Assembly**, co-driven by **cocotb**
 - **synthesized** to a **physical ASIC layout** through **OpenLane2** on the **SkyWater 130nm** open-source PDK
 
-`R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup, a pipelined successor is coming next.
+`R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic (I like coming up with cool names) core lineup, a pipelined successor is coming next.
 
 ---
 
