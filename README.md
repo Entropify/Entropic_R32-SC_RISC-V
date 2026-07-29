@@ -29,7 +29,8 @@ The chip features:
 
 **Microarchitecture diagram:**
 
-<img width="5766" height="3828" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/d5f17b7b-8606-434c-80d0-32736d691b5b" />
+<img width="2883" height="1914" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/597e9e28-8283-4add-9fd4-9fb336eaa12f" />
+
 
 
 **Datapath:**
