@@ -27,7 +27,9 @@ The chip features:
 
 `soc_top` wraps the core (`rv32i_core`) together with separate instruction (ROM) and data memory (RAM) modules, connected via a clean mapping interface.
 
-**[diagram]**
+**Microarchitecture diagram:**
+
+<img width="11532" height="7656" alt="rv32i_sc_microarchitecture" src="https://github.com/user-attachments/assets/142a2fda-7d42-4617-b520-34c96fa07118" />
 
 **Datapath:**
 - **Fetch:** Program Counter → Instruction Memory
@@ -102,6 +104,12 @@ The assembly program exercises every single instruction in the ISA extensively. 
 
 On failure, a self-designed error reporting system consists of unique codes (2–36) writes the error code to reg `x10` and branches the core into a halt label to stop the testbench, making failures immediately diagnosable without tediously digging through waveforms.
 
+**Top level testbench generated waveform:**
+
+<img width="2241" height="642" alt="Screenshot 2026-07-28 230323" src="https://github.com/user-attachments/assets/37a200f2-3f98-4eea-9fd2-425d38584c06" />
+
+
+
 ### Known limitations
 
 - Full-core differential testing against a reference ISA simulator (a self-written Python interpreter, and/or Spike) and the official [`riscv-arch-test`](https://github.com/riscv-non-isa/riscv-arch-test) compliance suite are planned but not yet implemented. I will implement them after the pipelined core is complete.
@@ -113,16 +121,6 @@ On failure, a self-designed error reporting system consists of unique codes (2�
 Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130** open-source PDK, run locally via WSL2 + Docker rather than through CI, specifically to work through the toolchain hands-on and understand each step of the standard ASIC flow (synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDS).
 
 The core (`rv32i_core`) was synthesized standalone, independent of the instruction/data memory modules, which is similar to how memory is typically implemented as a separate hard macro (SRAM) in real ASIC design rather than synthesized flip-flop arrays that takes up many more cells.
-
-Initially, the design ran into a couple issues I had to manually debug during the ASIC flow:
-
-- A initial 20 ns clock period caused setup timing violations in the SS (slow-slow) corner (poorest transistor production, 100°C operating temperature, 1.6v lower than usual operating voltage), which was resolved through a combination of increasing the clock period to 28 ns and setting the `SYNTH_STRATEGY` variable in OpenLane2 to "DELAY 1".
-- Antenna rule violations were resolved by setting `DIODE_INSERTION_STRATEGY` to a value of 3 (OpenROAD Antenna Avoidance Flow, which auto-inserts protection diodes during routing).
-- Max slew / max cap violations caused by a high-fanout net. I traced a specific problematic net (_00997_) through the synthesized netlist to its source: the instruction[19] bit (part of the rs1 field) fanning out to 115 flip-flop inputs across the register file's address decode. This is partially alleviated via changing the `SYNTH_MAX_FANOUT` variable but not fully resolved yet. I think a full resolution of this in the future would require architecturally reworking the register file addressing logic by adding buffers.
-
-**[GDS layout screenshot (KLayout, 2D)]**
-
-**[3D rendered layout screenshot]**
 
 ### Results
 
@@ -142,7 +140,22 @@ Initially, the design ran into a couple issues I had to manually debug during th
 | Setup timing | Met, ~1.2 ns margin |
 
 
-**Cell breakdown:**
+Initially, the design ran into a couple issues I had to manually debug during the ASIC flow:
+
+- An initial 20 ns clock period caused setup timing violations in the SS (slow-slow) corner (poorest transistor production, 100°C operating temperature, 1.6v lower than usual operating voltage), which was resolved through a combination of increasing the clock period to 28 ns and setting the `SYNTH_STRATEGY` variable in OpenLane2 to "DELAY 1".
+- Antenna rule violations were resolved by setting `DIODE_INSERTION_STRATEGY` to a value of 3 (OpenROAD Antenna Avoidance Flow, which auto-inserts protection diodes during routing).
+- Max slew / max cap violations caused by a high-fanout net. I traced a specific problematic net (_00997_) through the synthesized netlist to its source: the instruction[19] bit (part of the rs1 field) fanning out to 115 flip-flop inputs across the register file's address decode. This is partially alleviated via changing the `SYNTH_MAX_FANOUT` variable but not fully resolved yet. I think a full resolution of this in the future would require architecturally reworking the register file addressing logic by adding buffers.
+
+### GDS Render:
+
+<img width="2557" height="1437" alt="Screenshot 2026-07-28 225719" src="https://github.com/user-attachments/assets/da7afc6a-dab7-48a9-8336-674ec5ae6333" />
+
+**To-scale comparison with my previous project just for fun :)**
+
+<img width="1975" height="1360" alt="chip comparison pic" src="https://github.com/user-attachments/assets/d1d90501-1342-4f46-bd63-779a38494bcc" />
+
+
+### Cell breakdown:
 
 | Category | Cell Types | Count |
 |---|---|---|
