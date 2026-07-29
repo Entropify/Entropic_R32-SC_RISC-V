@@ -131,7 +131,7 @@ Failures report expected vs. actual values directly via `$fatal`.
 
 <img width="2241" height="280" alt="Screenshot 2026-07-29 000940" src="https://github.com/user-attachments/assets/5d1c5711-613d-463d-8447-a84c75b14b00" />
 
-### Full-core (Python cocotb + Icarus + Makefile + self-checking assembly)
+### Full-core (Python cocotb + Icarus + Makefile + self-checking RISC-V Assembly)
 
 `tb/tb_top_soc.s` is a self-checking RISC-V assembly program loaded into instruction memory and co-driven by `tb_top_soc.py` through cocotb and Icarus Verilog's VPI.
 The assembly program exercises every single instruction in the ISA extensively. Each instruction's result is checked against a hand-computed expected value.
