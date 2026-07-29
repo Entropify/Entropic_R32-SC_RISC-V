@@ -20,7 +20,7 @@
 
 **Entropic R32-SC** is a single-cycle **RISC-V** (RV32I) CPU that was:
 - **designed** and **built completely from scratch** in **Verilog**
-- **fully verified** through **self-written testbenches** in **SystemVerilog** and **RISC-V Assembly**
+- **fully verified** through **self-written testbenches** in **SystemVerilog** and **RISC-V Assembly**, co-driven by **cocotb**
 - **synthesized** to a **physical ASIC layout** through **OpenLane2** on the **SkyWater 130nm** open-source PDK
 
 `R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup, a pipelined successor is coming next.
@@ -55,10 +55,16 @@ The chip features:
 - **Fetch:** Program Counter → Instruction Memory
 - **Decode:** Control Unit + Immediate Generator + ALU Control, driven off the fetched instruction
 - **Execute:** Register File → ALU (with Branch Comparator running in parallel for branch instructions)
-- **Memory:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
+- **Memory Access:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
 - **Writeback:** A 4-to-1 mux selects between ALU result, filtered memory data, `PC+4` (for `jal`/`jalr` link), and the immediate (for `lui`), based on `mem_to_reg`
 
 Everything happens within a single clock cycle. There's no pipelining (yet!), no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
+
+---
+
+## GDS Render
+
+<img width="2557" height="1437" alt="Screenshot 2026-07-28 225719" src="https://github.com/user-attachments/assets/da7afc6a-dab7-48a9-8336-674ec5ae6333" />
 
 ---
 
@@ -127,7 +133,7 @@ These testbenches run constrained-random testings (10,000+ iterations) against a
 
 Failures report expected vs. actual values directly via `$fatal`.
 
-**Example module-level constrained random testbench generated waveform (example here is the register file):**
+**Example module-level constrained random testbench generated waveform (example here is register file):**
 
 <img width="2241" height="280" alt="Screenshot 2026-07-29 000940" src="https://github.com/user-attachments/assets/5d1c5711-613d-463d-8447-a84c75b14b00" />
 
@@ -176,13 +182,14 @@ The core (`rv32i_core`) was synthesized standalone, independent of the instructi
 
 Initially, the design ran into a couple issues I had to manually debug during the ASIC flow:
 
-- An initial 20 ns clock period caused setup timing violations in the SS (slow-slow) corner (poorest transistor production, 100°C operating temperature, 1.6v lower than usual operating voltage), which was resolved through a combination of increasing the clock period to 28 ns and setting the `SYNTH_STRATEGY` variable in OpenLane2 to "DELAY 1".
+- An initial 20 ns clock period caused setup timing violations in the `ss` (slow-slow) corner (poorest transistor production, 100°C operating temperature, 1.6v lower than usual operating voltage), which was resolved through a combination of increasing the clock period to 28 ns and setting the `SYNTH_STRATEGY` variable in OpenLane2 to "DELAY 1".
 - Antenna rule violations were resolved by setting `DIODE_INSERTION_STRATEGY` to a value of 3 (OpenROAD Antenna Avoidance Flow, which auto-inserts protection diodes during routing).
 - Max slew / max cap violations caused by a high-fanout net. I traced a specific problematic net (_00997_) through the synthesized netlist to its source: the instruction[19] bit (part of the rs1 field) fanning out to 115 flip-flop inputs across the register file's address decode. This is partially alleviated via changing the `SYNTH_MAX_FANOUT` variable but not fully resolved yet. I think a full resolution of this in the future would require architecturally reworking the register file addressing logic by adding buffers.
 
-### GDS Renders:
 
-<img width="2557" height="1437" alt="Screenshot 2026-07-28 225719" src="https://github.com/user-attachments/assets/da7afc6a-dab7-48a9-8336-674ec5ae6333" /> <img width="2557" height="1437" alt="Screenshot 2026-07-29 014316" src="https://github.com/user-attachments/assets/33b3c854-9752-410c-927a-cedfee62a490" />
+### Disassembled GDS render:
+
+<img width="2557" height="1437" alt="Screenshot 2026-07-29 014316" src="https://github.com/user-attachments/assets/33b3c854-9752-410c-927a-cedfee62a490" />
 
 
 ### Cell breakdown:
