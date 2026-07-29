@@ -158,7 +158,7 @@ On failure, a self-designed error reporting system consists of unique codes (2�
 
 ## ASIC Implementation
 
-Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130** open-source PDK, run locally via WSL2 + Docker rather than through CI, specifically to work through the toolchain hands-on and understand each step of the standard ASIC flow (synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDS).
+Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130** open-source PDK, run locally via WSL2 + Docker rather than through a premade CI like TinyTapeout's Github Actions ASIC flow, specifically to work through the toolchain hands-on and understand each step of the standard ASIC flow (synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDS).
 
 The core (`rv32i_core`) was synthesized standalone, independent of the instruction/data memory modules, which is similar to how memory is typically implemented as a separate hard macro (SRAM) in real ASIC design rather than synthesized flip-flop arrays that takes up many more cells.
 
