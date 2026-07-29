@@ -43,7 +43,7 @@ The chip features:
 
 ## Architecture
 
-`soc_top` wraps the core (`rv32i_core`) together with separate instruction (ROM) and data memory (RAM) modules, connected via a clean mapping interface.
+`soc_top` wraps the core (`rv32i_core`) together with separate instruction (ROM) and data memory (RAM) modules, connected via a mapping interface.
 
 **Microarchitecture diagram:**
 
@@ -58,7 +58,7 @@ The chip features:
 - **Memory Access:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
 - **Writeback:** A 4-to-1 mux selects between ALU result, filtered memory data, `PC+4` (for `jal`/`jalr` link), and the immediate (for `lui`), based on `mem_to_reg`
 
-Everything happens within a single clock cycle. There's no pipelining (yet!), no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
+Everything happens within a single clock cycle. There's no pipelining (yet!) and all the hassle that comes with that. The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
 
 ---
 
@@ -95,9 +95,9 @@ A few notable design decisions worth calling out:
 
 - **Active-low, asynchronous reset (`rst_n`)** throughout the design to ensure a stable, consistant reset signal during power-up
  
-- **Combinational register file reads** — `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock period
+- **Combinational register file reads:** `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock period
  
-- **`x0` hardwired to zero** — writes to `x0` are architecturally discarded, verified explicitly in testing
+- **`x0` hardwired to zero:** writes to `x0` are architecturally discarded, verified explicitly in testing
  
 - **4-bit ALU control encoding**, decoded from opcode/`funct3`/`funct7` via a dedicated `alu_control` module rather than inline in the ALU itself, keeping the ALU's own logic purely arithmetic
  
