@@ -2,6 +2,7 @@
 <img width="1702" height="630" alt="Entropic R32-SC" src="https://github.com/user-attachments/assets/d4081ac6-d2c4-4241-be71-92c804438ccd" />
 
 <h1 align="center">Entropic R32-SC (RV32I CPU)</h1>
+<p align="center"><i>(image above is the real GDS render of the CPU on an ASIC)</i></p>
 
 <div align="center">
 
