@@ -29,7 +29,8 @@ The chip features:
 
 **Microarchitecture diagram:**
 
-<img width="11532" height="7656" alt="rv32i_sc_microarchitecture" src="https://github.com/user-attachments/assets/142a2fda-7d42-4617-b520-34c96fa07118" />
+<img width="5766" height="3828" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/d5f17b7b-8606-434c-80d0-32736d691b5b" />
+
 
 **Datapath:**
 - **Fetch:** Program Counter → Instruction Memory
