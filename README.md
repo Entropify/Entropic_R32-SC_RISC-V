@@ -1,6 +1,6 @@
 # Entropic R32-SC
 
-A single-cycle RISC-V (RV32I) CPU, designed and built completely from scratch in Verilog, fully verified through self written testbenches in SystemVerilog and RISC-V Assembly, and synthesized to a physical ASIC layout through OpenLane2 on the SkyWater 130nm open-source PDK.
+A single-cycle RISC-V (RV32I) CPU, designed and built completely from scratch in Verilog, fully verified through self-written testbenches in SystemVerilog and RISC-V Assembly, and synthesized to a physical ASIC layout through OpenLane2 on the SkyWater 130nm open-source PDK.
 
 `R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup, a pipelined successor is coming next (see [Roadmap](#roadmap)).
 
@@ -13,16 +13,16 @@ Entropic R32-SC is a complete RV32I implementation built and verified from the g
 It covers the full base instruction set: arithmetic/logic, immediates, loads/stores (including byte/halfword variants), branches, jumps, and upper-immediate instructions.
 
 
-The core has been:
+The chip features:
 - Top level module verified through directed, self-checking assembly tests
-- Submodule-level verified through both constrained-random testing against golden models as well as directed tests for edge case testing
+- Submodule level verified through both constrained-random testing against golden models as well as directed tests for edge case testing
 - Synthesized and physically implemented through the full RTL-to-GDSII flow using [OpenLane2](https://github.com/efabless/openlane2) and the [SKY130 PDK](https://github.com/google/skywater-pdk), ran locally in a Docker + WSL environment
 
 ---
 
 ## Architecture
 
-`soc_top` wraps the core (`rv32i_core`) together with separate instruction and data memory modules, connected via a clean memory-mapped interface.
+`soc_top` wraps the core (`rv32i_core`) together with separate instruction (ROM) and data memory (RAM) modules, connected via a clean mapping interface.
 
 **[diagram]**
 
@@ -33,7 +33,7 @@ The core has been:
 - **Memory:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
 - **Writeback:** A 4-to-1 mux selects between ALU result, filtered memory data, `PC+4` (for `jal`/`jalr` link), and the immediate (for `lui`), based on `mem_to_reg`
 
-Everything happens within a single clock cycle. There's no pipelining (yet!), no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is bounded by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
+Everything happens within a single clock cycle. There's no pipelining (yet!), no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is limited by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
 
 ---
 
@@ -52,23 +52,25 @@ Full RV32I base instruction set — 40/40 instructions implemented.
 | Branches | `BEQ` `BNE` `BLT` `BGE` `BLTU` `BGEU` |
 | System | `FENCE` `ECALL` `EBREAK` |
 
-`ECALL`/`EBREAK` currently raise a `halt` signal rather than implementing full trap/CSR machinery, CSR support will be implemented in a future pipelined version.
+`ECALL`/`EBREAK` currently raise a `halt` signal rather than implementing full trap/CSR machinery, CSR support will be implemented in a future pipelined CPU.
 `FENCE` is currently implemented as `NOP` and will be reworked after pipelining as well.
 
 ---
 
-## Design Decisions
+## Design
 
-A few notable choices worth calling out, since they weren't arbitrary:
+A few notable design decisions worth calling out:
 
 - **Active-low, asynchronous reset (`rst_n`)** throughout the design to ensure a stable, consistant reset signal during power-up
-- **Combinational register file reads** — `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock
+- **Combinational register file reads** — `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock period
 - **`x0` hardwired to zero** — writes to `x0` are architecturally discarded, verified explicitly in testing
 - **4-bit ALU control encoding**, decoded from opcode/`funct3`/`funct7` via a dedicated `alu_control` module rather than inline in the ALU itself, keeping the ALU's own logic purely arithmetic
 - **2-bit `pc_src`** to cleanly distinguish between sequential (`PC+4`), branch, and jump (`jal`/`jalr`) targets in the next-PC mux
 - **2-bit `mem_to_reg`** to distinguish between writing ALU result, writing RAM read, writing link address (`PC+4`) for `jal`/`jalr`, and writing directly from `imm_gen` for `lui` to bypass unnecessary data routing
-- **Separate `load_filter` / `store_mask` modules** for byte/halfword handling, rather than embedding sign-extension and byte-lane logic directly in `data_mem`. This keeps the memory module itself simple and the addressing logic easily testbench-able
+- **Separate `load_filter` / `store_mask` modules** for byte/halfword handling, rather than embedding sign-extension and byte-lane logic directly in `data_mem`; this keeps the memory module itself simple and the addressing logic easily testbench-able
+- **Detached Branch Comparator:** Branch condition logic is evaluated completely independently from the main ALU arithmetic; this significantly shortens the critical path during branch instructions
 - **`pc.v` broken out as its own module** rather than inlined into `rv32i_core`. This keeps next-PC muxing (sequential/branch/jump) independently testable, same idea as the load/store split above
+- **`jalr` hardware bitmask:** The least significant bit of the `jalr` target address is hardwired to zero via a `{[31:1], 1'b0}` concatenation at the PC multiplexer, enforcing the RISC-V specification at the hardware routing level rather than relying on the ALU.
 
 ### Module list (`rtl/`)
 
@@ -80,28 +82,40 @@ Submodules: `alu.v` · `alu_control.v` · `branch_comp.v` · `control_unit.v` ·
 
 ## Verification
 
-A two-tier verification strategy: module-level constrained-random testing against golden models, plus full-core directed self-checking tests.
+A two-tier verification strategy: module-level constrained-random testing, plus full-core directed self-checking tests.
 
-### Module-level (golden model + CRT)
+### Module-level (Icarus + golden model + CRT & directed testing)
 
-Key combinational modules (`alu`, `load_filter`, `store_mask`, `branch_comp`, `imm_gen`, `reg_file`) each have a dedicated SystemVerilog testbench that runs constrained-random testing (10,000+ iterations) against a golden reference model, in addition to directed corner-case tests (sign-extension boundaries, each byte/halfword offset, default fallback cases). Failures report expected vs. actual values directly via `$fatal`.
+Key combinational modules (`alu`, `load_filter`, `store_mask`, `branch_comp`, `imm_gen`, `reg_file`) each have its own dedicated SystemVerilog testbench.
 
-### Full-core (self-checking assembly)
+These testbenches run constrained-random testings (10,000+ iterations) against a golden reference model unique to each module, in addition to directed corner-case tests (sign-extension boundaries, each byte/halfword offset, default fallback cases). 
 
-`tb/tb_top_soc.s` is a self-checking RISC-V assembly program exercising every instruction in the ISA. Each instruction's result is checked against a hand-computed expected value; on failure, a unique error code (2–36) is written to `x10` and the core halts, making failures immediately diagnosable without digging through waveforms.
+Failures report expected vs. actual values directly via `$fatal`.
 
-### Known limitations (honest, documented gaps)
+### Full-core (Python cocotb + Icarus + Makefile + self-checking assembly)
 
-- The `jal`/`jalr` self-check verifies control transfer and link-address correctness together (via a jump-there-and-back pattern), but does **not** specifically exercise `jalr`'s LSB-clearing behavior (`target = (rs1 + imm) & ~1`), since the tested link address is always word-aligned. Flagged here rather than silently claimed as covered.
-- Full-core differential testing against a reference ISA simulator (a self-written Python interpreter, and/or Spike) and the official [`riscv-arch-test`](https://github.com/riscv-non-isa/riscv-arch-test) compliance suite are planned but not yet implemented — deferred until after the pipelined core, where the same infrastructure will cover both.
+`tb/tb_top_soc.s` is a self-checking RISC-V assembly program loaded into instruction memory and co-driven by `tb_top_soc.py` through cocotb and Icarus Verilog's VPI.
+The assembly program exercises every single instruction in the ISA extensively. Each instruction's result is checked against a hand-computed expected value.
+
+On failure, a self-designed error reporting system consists of unique codes (2–36) writes the error code to reg `x10` and branches the core into a halt label to stop the testbench, making failures immediately diagnosable without tediously digging through waveforms.
+
+### Known limitations
+
+- Full-core differential testing against a reference ISA simulator (a self-written Python interpreter, and/or Spike) and the official [`riscv-arch-test`](https://github.com/riscv-non-isa/riscv-arch-test) compliance suite are planned but not yet implemented. I will implement them after the pipelined core is complete.
 
 ---
 
 ## ASIC Implementation
 
-Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130** open-source PDK, run locally via WSL2 + Docker rather than through CI, specifically to work through the toolchain hands-on (synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDS).
+Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130** open-source PDK, run locally via WSL2 + Docker rather than through CI, specifically to work through the toolchain hands-on and understand each step of the standard ASIC flow (synthesis → floorplan → placement → CTS → routing → DRC/LVS → GDS).
 
-The core (`rv32i_core`) was synthesized standalone, independent of the instruction/data memory modules — reflecting how memory is typically implemented as a separate hard macro (SRAM) in real ASIC design rather than synthesized flip-flop arrays.
+The core (`rv32i_core`) was synthesized standalone, independent of the instruction/data memory modules, which is similar to how memory is typically implemented as a separate hard macro (SRAM) in real ASIC design rather than synthesized flip-flop arrays that takes up many more cells.
+
+Initially, the design ran into a couple issues I had to manually debug during the ASIC flow:
+
+- A initial 20 ns clock period caused setup timing violations in the SS (slow-slow) corner (poorest transistor production, 100°C operating temperature, 1.6v lower than usual operating voltage), which was resolved through a combination of increasing the clock period to 28 ns and setting the `SYNTH_STRATEGY` variable in OpenLane2 to "DELAY 1".
+- Antenna rule violations were resolved by setting `DIODE_INSERTION_STRATEGY` to a value of 3 (OpenROAD Antenna Avoidance Flow, which auto-inserts protection diodes during routing).
+- Max slew / max cap violations caused by a high-fanout net. I traced a specific problematic net (_00997_) through the synthesized netlist to its source: the instruction[19] bit (part of the rs1 field) fanning out to 115 flip-flop inputs across the register file's address decode. This is partially alleviated via changing the `SYNTH_MAX_FANOUT` variable but not fully resolved yet. I think a full resolution of this in the future would require architecturally reworking the register file addressing logic by adding buffers.
 
 **[GDS layout screenshot (KLayout, 2D)]**
 
@@ -111,36 +125,45 @@ The core (`rv32i_core`) was synthesized standalone, independent of the instructi
 
 | Metric | Value |
 |---|---|
-| Clock period | 28 ns (~35.7 MHz) |
+| Clock period | 28 ns |
+| Clock speed | ~35.7 MHz |
 | Total cell count | 7,772 |
-| Flip-flops | 1,024 *(the full 32×32-bit register file)* |
+| Flip-flops | 1,024 *(the 32×32-bit register file)* |
+| Wire count | 7,680 |
+| Total wire length | 492,649 μm (~0.49 m) |
+| Core Area | 180,939 µm² |
+| Logic Area | 85,604 µm² |
+| Core Utilization | 47.3% |
 | DRC | 0 violations |
 | LVS | Circuits match |
-| Setup timing (signoff) | Met, ~1.2 ns margin |
+| Setup timing | Met, ~1.2 ns margin |
+
 
 **Cell breakdown:**
 
-| Category | Count |
-|---|---|
-| Combinational (AOI/OAI compound gates) | 3,208 |
-| NAND | 2,495 |
-| Flip-Flops | 1,024 |
-| AND | 338 |
-| NOR | 244 |
-| Inverter | 217 |
-| OR | 180 |
-| XOR/XNOR | 38 |
-| Multiplexer | 28 |
+| Category | Cell Types | Count |
+|---|---|---|
+| Combinational (AOI/OAI compound gates) | a2111o, a2111oi, a211o, a211oi, a21bo, a21boi, a21o, a21oi, a221o, a221oi, a22o, a22oi, a2bb2o, a2bb2oi, a311o, a311oi, a31o, a31oi, a32o, a32oi, a41o, a41oi, o2111a, o2111ai, o211a, o211ai, o21a, o21ai, o21ba, o21bai, o221a, o221ai, o22a, o22ai, o2bb2a, o2bb2ai, o311a, o311ai, o31a, o31ai, o32a, o32ai, o41a, o41ai | 3,208 |
+| NAND | nand2, nand2b, nand3, nand3b, nand4, nand4b | 2,495 |
+| Flip-Flops | dfrtp | 1,024 |
+| AND | and2, and2b, and3, and3b, and4, and4b, and4bb | 338 |
+| NOR | nor2, nor3, nor3b, nor4, nor4b | 244 |
+| Inverter | inv | 217 |
+| OR | or2, or3, or3b, or4, or4b, or4bb | 180 |
+| XOR/XNOR | xnor2, xor2 | 38 |
+| Multiplexer | mux2, mux4 | 28 |
+| Total | | 7772 |
 
 ### Critical path
 
-The worst-case timing path runs from instruction fetch (`instruction[15]`, part of the `rs1` field) through decode/control logic and the register-file address-decode path, to the data memory write port — essentially the full single-cycle datapath for a store instruction in one pass. This is architecturally expected for a single-cycle design: the clock period is bounded by the single longest instruction path, with no pipelining to shorten it.
+The current worst-case clocked datapath runs from instruction fetch (`instruction[24]`, part of the `rs2` field) through decode/control logic and the register-file address-decode path, to the data memory write port, `data_write[25]`. This is essentially the full single-cycle datapath for a store instruction in one pass. This is architecturally expected for a single-cycle design.
 
-Register-file address decode (`rs1`/`rs2` bit fields) is a naturally high-fanout signal source in this design, which was addressed via `SYNTH_MAX_FANOUT` buffering during synthesis.
+In the future, I would like to revisit this project and optimize this datapath as well as the data forwarding / masking modules to hopefully lower the clock period to 20 ns.
+
 
 ### Known limitation
 
-Max slew and max cap violations remain in several timing corners (`ss`, `tt` process corners), stemming from residual high-fanout nets in the decode path. These didn't block DRC/LVS/timing signoff, but are a real signal-integrity consideration for an actual fabricated chip. Revisiting this properly (like thorough RTL-level restructuring of the decode fanout, rather than just tool-level optimization) is planned once I've got more formal training in this area at uWaterloo.
+Max slew and max cap violations remain in several timing corners (`ss`, `tt` process corners), stemming from residual high-fanout nets in the decode path. These didn't fail signoffs for DRC / LVS / timing, but are a real signal-integrity consideration for an actual fabricated chip. Revisiting this properly (like thorough RTL-level restructuring of the decode signal fanout, rather than just tool-level optimization) is planned once I've learned more formal knowledge in this area at uWaterloo.
 
 ---
 
@@ -166,32 +189,6 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
     └── top/                #  tb_top_soc.s (self-checking assembly), tb_top_soc.py (cocotb driver)
 ```
 
-## How to Run
-
-### Module-level testbenches (cocotb + Icarus Verilog)
-```bash
-cd sim/
-make  # runs the per-module cocotb tests defined in the Makefile
-```
-
-### Module-level golden-model testbenches (SystemVerilog, Vivado xsim)
-```bash
-cd tb/modules/
-# open/run individual testbenches, e.g. tb_load_filter.sv, in Vivado xsim
-```
-
-### Full-core self-checking assembly test
-```bash
-cd tb/top/
-# tb_top_soc.s is assembled into tb/programs/, then driven via tb_top_soc.py (cocotb) against tb.v
-```
-
-### ASIC flow (OpenLane2 + SKY130)
-```bash
-python3 -m openlane --dockerized config.json
-```
-See `rtl/` for source files and the synthesis config used for the standalone core run described above.
-
 ---
 
 ## Roadmap
@@ -201,13 +198,12 @@ See `rtl/` for source files and the synthesis config used for the standalone cor
 - [ ] Official `riscv-arch-test` compliance suite
 - [ ] Compiled C program (via RISC-V GCC) run end-to-end as an integration demo
 - [ ] FPGA implementation on a AMD Xilinx Artix-7, eventually building toward a VGA-driven SoC
-- [ ] Revisit synthesis fanout/slew optimization at the RTL level
+- [ ] Revisit synthesis fanout / slew / critical path optimization at the RTL level
 
 ---
 
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
-
 
 Copyright (c) 2026 Zhiyuan (Jerry) Jiang — design, verification and documentation
