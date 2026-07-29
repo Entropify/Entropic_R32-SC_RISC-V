@@ -2,17 +2,21 @@
 
 A single-cycle RISC-V (RV32I) CPU, designed and built completely from scratch in Verilog, fully verified through self written testbenches in SystemVerilog and RISC-V Assembly, and synthesized to a physical ASIC layout through OpenLane2 on the SkyWater 130nm open-source PDK.
 
-`R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup — the pipelined successor is next (see [Roadmap](#roadmap)).
+`R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup, a pipelined successor is coming next (see [Roadmap](#roadmap)).
 
 ---
 
 ## Overview
 
-Entropic R32-SC is a complete RV32I implementation covering the full base instruction set — arithmetic/logic, immediates, loads/stores (including byte/halfword variants), branches, jumps, and upper-immediate instructions — built and verified from the ground up as a personal project ahead of starting Electrical Engineering at the University of Waterloo.
+Entropic R32-SC is a complete RV32I implementation built and verified from the ground up as a passion project ahead of starting Electrical Engineering at the University of Waterloo.
+
+It covers the full base instruction set: arithmetic/logic, immediates, loads/stores (including byte/halfword variants), branches, jumps, and upper-immediate instructions.
+
 
 The core has been:
-- Verified through directed, self-checking assembly tests and module-level constrained-random testing against golden models
-- Synthesized and physically implemented through the full RTL-to-GDSII flow using [OpenLane2](https://github.com/efabless/openlane2) and the [SKY130 PDK](https://github.com/google/skywater-pdk), run locally
+- Top level module verified through directed, self-checking assembly tests
+- Submodule-level verified through both constrained-random testing against golden models as well as directed tests for edge case testing
+- Synthesized and physically implemented through the full RTL-to-GDSII flow using [OpenLane2](https://github.com/efabless/openlane2) and the [SKY130 PDK](https://github.com/google/skywater-pdk), ran locally in a Docker + WSL environment
 
 ---
 
@@ -22,14 +26,14 @@ The core has been:
 
 **[ Architecture / microarchitecture diagram — insert here ]**
 
-**Datapath at a glance:**
+**Datapath:**
 - **Fetch:** Program Counter → Instruction Memory
 - **Decode:** Control Unit + Immediate Generator + ALU Control, driven off the fetched instruction
 - **Execute:** Register File → ALU (with Branch Comparator running in parallel for branch instructions)
 - **Memory:** Data Memory, with a Load Filter (byte/halfword sign- and zero-extension) and Store Mask (byte/halfword write-enable) handling sub-word accesses
 - **Writeback:** A 4-to-1 mux selects between ALU result, filtered memory data, `PC+4` (for `jal`/`jalr` link), and the immediate (for `lui`), based on `mem_to_reg`
 
-Everything happens within a single clock cycle — there's no pipelining, no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is bounded by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the actual measured critical path).
+Everything happens within a single clock cycle. There's no pipelining (yet!), no hazards to resolve, and no forwarding logic. The tradeoff is clock speed: the core's maximum frequency is bounded by its single longest instruction path (see [ASIC Implementation](#asic-implementation) for the critical path).
 
 ---
 
@@ -48,7 +52,8 @@ Full RV32I base instruction set — 40/40 instructions implemented.
 | Branches | `BEQ` `BNE` `BLT` `BGE` `BLTU` `BGEU` |
 | System | `FENCE` `ECALL` `EBREAK` |
 
-`ECALL`/`EBREAK` currently raise a `halt` signal rather than implementing full trap/CSR machinery — CSR support is deferred to the pipelined successor.
+`ECALL`/`EBREAK` currently raise a `halt` signal rather than implementing full trap/CSR machinery, CSR support will be implemented in a future pipelined version.
+`FENCE` is currently implemented as `NOP` and will be reworked after pipelining as well.
 
 ---
 
@@ -56,17 +61,20 @@ Full RV32I base instruction set — 40/40 instructions implemented.
 
 A few notable choices worth calling out, since they weren't arbitrary:
 
-- **Active-low, asynchronous reset (`rst_n`)** throughout the design
+- **Active-low, asynchronous reset (`rst_n`)** throughout the design to ensure a stable, consistant reset signal during power-up
 - **Combinational register file reads** — `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock
 - **`x0` hardwired to zero** — writes to `x0` are architecturally discarded, verified explicitly in testing
 - **4-bit ALU control encoding**, decoded from opcode/`funct3`/`funct7` via a dedicated `alu_control` module rather than inline in the ALU itself, keeping the ALU's own logic purely arithmetic
 - **2-bit `pc_src`** to cleanly distinguish between sequential (`PC+4`), branch, and jump (`jal`/`jalr`) targets in the next-PC mux
-- **Separate `load_filter` / `store_mask` modules** for byte/halfword handling, rather than embedding sign-extension and byte-lane logic directly in `data_mem` — keeps the memory module itself simple and the addressing logic independently testable
-- **`pc.v` broken out as its own module** rather than inlined into `rv32i_core` — keeps next-PC muxing (sequential/branch/jump) independently testable, same rationale as the load/store split above
+- **2-bit `mem_to_reg`** to distinguish between writing ALU result, writing RAM read, writing link address (`PC+4`) for `jal`/`jalr`, and writing directly from `imm_gen` for `lui` to bypass unnecessary data routing
+- **Separate `load_filter` / `store_mask` modules** for byte/halfword handling, rather than embedding sign-extension and byte-lane logic directly in `data_mem`. This keeps the memory module itself simple and the addressing logic easily testbench-able
+- **`pc.v` broken out as its own module** rather than inlined into `rv32i_core`. This keeps next-PC muxing (sequential/branch/jump) independently testable, same idea as the load/store split above
 
 ### Module list (`rtl/`)
 
-`alu.v` · `alu_control.v` · `branch_comp.v` · `control_unit.v` · `data_mem.v` · `imm_gen.v` · `instruction_mem.v` · `load_filter.v` · `pc.v` · `reg_file.v` · `rv32i_core.v` · `soc_top.v` · `store_mask.v`
+Top modules: `soc_top.v` · `rv32i_core.v`
+
+Submodules: `alu.v` · `alu_control.v` · `branch_comp.v` · `control_unit.v` · `data_mem.v` · `imm_gen.v` · `instruction_mem.v` · `load_filter.v` · `pc.v` · `reg_file.v` · `store_mask.v`
 
 ---
 
@@ -106,8 +114,8 @@ The core (`rv32i_core`) was synthesized standalone, independent of the instructi
 | Clock period | 28 ns (~35.7 MHz) |
 | Total cell count | 7,772 |
 | Flip-flops | 1,024 *(the full 32×32-bit register file)* |
-| DRC | 0 violations ✅ |
-| LVS | Circuits match ✅ |
+| DRC | 0 violations |
+| LVS | Circuits match |
 | Setup timing (signoff) | Met, ~1.2 ns margin |
 
 **Cell breakdown:**
@@ -137,20 +145,6 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 ---
 
 ## Repository Structure
-
-```
-rtl/            RTL source (see Module list above)
-sim/            Per-module cocotb + Icarus Verilog testbenches
-  cocotb_sim/       cocotb test infrastructure
-  *_test            individual module test scripts (alu_test, control_unit_test, etc.)
-  Makefile          cocotb/Icarus build + run
-tb/             SystemVerilog golden-model testbenches + full-core assembly test
-  modules/          per-module SV testbenches (tb_alu.sv, tb_load_filter.sv, etc.),
-                     constrained-random + golden-model, run via Vivado xsim
-  programs/         assembled full-core test program artifacts (.s/.o/.elf/.hex)
-  top/              tb_top_soc.s (self-checking assembly), tb_top_soc.py (cocotb driver),
-                     tb.v (top-level testbench wrapper)
-```
 
 ```
 |
@@ -203,11 +197,10 @@ See `rtl/` for source files and the synthesis config used for the standalone cor
 ## Roadmap
 
 - [ ] Pipelined successor — **Entropic R32-P** (5-stage: IF/ID/EX/MEM/WB), with hazard detection, forwarding, and branch handling
-- [ ] `jalr` LSB-clear directed test
 - [ ] Full-core differential testing against a Python-based golden ISA model (and/or Spike)
 - [ ] Official `riscv-arch-test` compliance suite
-- [ ] Compiled C program (via RISC-V GCC toolchain) run end-to-end as an integration demo
-- [ ] FPGA bring-up on a Basys3 (Artix-7), eventually building toward a VGA-driven SoC
+- [ ] Compiled C program (via RISC-V GCC) run end-to-end as an integration demo
+- [ ] FPGA implementation on a AMD Xilinx Artix-7, eventually building toward a VGA-driven SoC
 - [ ] Revisit synthesis fanout/slew optimization at the RTL level
 
 ---
