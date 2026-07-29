@@ -77,6 +77,7 @@ Full RV32I base instruction set — 40/40 instructions implemented.
 | System | `FENCE` `ECALL` `EBREAK` |
 
 `ECALL`/`EBREAK` currently raise a `halt` signal rather than implementing full trap/CSR machinery, CSR support will be implemented in a future pipelined CPU.
+
 `FENCE` is currently implemented as `NOP` and will be reworked after pipelining as well.
 
 ---
@@ -86,14 +87,23 @@ Full RV32I base instruction set — 40/40 instructions implemented.
 A few notable design decisions worth calling out:
 
 - **Active-low, asynchronous reset (`rst_n`)** throughout the design to ensure a stable, consistant reset signal during power-up
+ 
 - **Combinational register file reads** — `rs1`/`rs2` data is available same-cycle, consistent with a single-cycle architecture where everything must resolve within one clock period
+ 
 - **`x0` hardwired to zero** — writes to `x0` are architecturally discarded, verified explicitly in testing
+ 
 - **4-bit ALU control encoding**, decoded from opcode/`funct3`/`funct7` via a dedicated `alu_control` module rather than inline in the ALU itself, keeping the ALU's own logic purely arithmetic
+ 
 - **2-bit `pc_src`** to cleanly distinguish between sequential (`PC+4`), branch, and jump (`jal`/`jalr`) targets in the next-PC mux
+ 
 - **2-bit `mem_to_reg`** to distinguish between writing ALU result, writing RAM read, writing link address (`PC+4`) for `jal`/`jalr`, and writing directly from `imm_gen` for `lui` to bypass unnecessary data routing
+  
 - **Separate `load_filter` / `store_mask` modules** for byte/halfword handling, rather than embedding sign-extension and byte-lane logic directly in `data_mem`; this keeps the memory module itself simple and the addressing logic easily testbench-able
+ 
 - **Detached Branch Comparator:** Branch condition logic is evaluated completely independently from the main ALU arithmetic; this significantly shortens the critical path during branch instructions
+ 
 - **`pc.v` broken out as its own module** rather than inlined into `rv32i_core`. This keeps next-PC muxing (sequential/branch/jump) independently testable, same idea as the load/store split above
+ 
 - **`jalr` hardware bitmask:** The least significant bit of the `jalr` target address is hardwired to zero via a `{[31:1], 1'b0}` concatenation at the PC multiplexer, enforcing the RISC-V specification at the hardware routing level rather than relying on the ALU.
 
 ### Module list (`rtl/`)
