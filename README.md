@@ -1,4 +1,21 @@
-# Entropic R32-SC
+
+<img width="1702" height="630" alt="Entropic R32-SC" src="https://github.com/user-attachments/assets/d4081ac6-d2c4-4241-be71-92c804438ccd" />
+
+<h1 align="center">Entropic R32-SC</h1>
+
+<div align="center">
+
+![RISC-V](https://img.shields.io/badge/riscv-%23283272.svg?style=for-the-badge&logo=riscv&logoColor=white) ![Static Badge](https://img.shields.io/badge/V-Verilog-blue?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/SV-SystemVerilog-darkblue?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/C-cocotb-lightblue?style=for-the-badge)
+ ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![AssemblyScript](https://img.shields.io/badge/assembly-%23000000.svg?style=for-the-badge&logo=assemblyscript&logoColor=white) ![Static Badge](https://img.shields.io/badge/IV-Icarus%20Verilog-blue?style=for-the-badge)
+![Static Badge](https://img.shields.io/badge/OP2-OpenLane2-black?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/M-Makefile-orange?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/SKY-SKY130-blue?style=for-the-badge)
+
+
+</div>
+
+
+
+
+
 
 A single-cycle RISC-V (RV32I) CPU:
 - designed and built completely from scratch in Verilog
@@ -98,6 +115,10 @@ Key combinational modules (`alu`, `load_filter`, `store_mask`, `branch_comp`, `i
 These testbenches run constrained-random testings (10,000+ iterations) against a golden reference model unique to each module, in addition to directed corner-case tests (sign-extension boundaries, each byte/halfword offset, default fallback cases). 
 
 Failures report expected vs. actual values directly via `$fatal`.
+
+**Example module-level constrained random testbench generated waveform (example here is the register file):**
+
+<img width="2241" height="280" alt="Screenshot 2026-07-29 000940" src="https://github.com/user-attachments/assets/5d1c5711-613d-463d-8447-a84c75b14b00" />
 
 ### Full-core (Python cocotb + Icarus + Makefile + self-checking assembly)
 
