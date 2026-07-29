@@ -1,6 +1,9 @@
 # Entropic R32-SC
 
-A single-cycle RISC-V (RV32I) CPU, designed and built completely from scratch in Verilog, fully verified through self-written testbenches in SystemVerilog and RISC-V Assembly, and synthesized to a physical ASIC layout through OpenLane2 on the SkyWater 130nm open-source PDK.
+A single-cycle RISC-V (RV32I) CPU:
+- designed and built completely from scratch in Verilog
+- fully verified through self-written testbenches in SystemVerilog and RISC-V Assembly
+- synthesized to a physical ASIC layout through OpenLane2 on the SkyWater 130nm open-source PDK
 
 `R32-SC` = **R**V**32**I, **S**ingle-**C**ycle. First entry in the Entropic core lineup, a pipelined successor is coming next.
 
