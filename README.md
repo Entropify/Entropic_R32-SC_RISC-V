@@ -24,7 +24,7 @@ The core has been:
 
 `soc_top` wraps the core (`rv32i_core`) together with separate instruction and data memory modules, connected via a clean memory-mapped interface.
 
-**[ Architecture / microarchitecture diagram — insert here ]**
+**[diagram]**
 
 **Datapath:**
 - **Fetch:** Program Counter → Instruction Memory
@@ -103,9 +103,9 @@ Synthesized end-to-end (RTL → GDSII) using **OpenLane2** against the **SKY130*
 
 The core (`rv32i_core`) was synthesized standalone, independent of the instruction/data memory modules — reflecting how memory is typically implemented as a separate hard macro (SRAM) in real ASIC design rather than synthesized flip-flop arrays.
 
-**[ GDS layout screenshot (KLayout, 2D) — insert here ]**
+**[GDS layout screenshot (KLayout, 2D)]**
 
-**[ 3D rendered layout screenshot — insert here ]**
+**[3D rendered layout screenshot]**
 
 ### Results
 
