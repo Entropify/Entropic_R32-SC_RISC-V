@@ -72,7 +72,7 @@ The tradeoff is clock speed: the core's maximum frequency is limited by its sing
 
 ## Instruction Set Coverage
 
-Full RV32I base instruction set — 40/40 instructions implemented.
+Full RV32I base instruction set: 40/40 instructions implemented.
 
 | Category | Instructions |
 |---|---|
@@ -248,7 +248,7 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 
 ## Roadmap
 
-- [ ] Pipelined successor — **Entropic R32-P** (5-stage: IF/ID/EX/MEM/WB), with hazard detection, forwarding, and branch handling
+- [ ] Pipelined successor with 5-stage: IF/ID/EX/MEM/WB, hazard detection, forwarding, and branch handling
 - [ ] Full-core differential testing against a Python-based golden ISA model (and/or Spike)
 - [ ] Official `riscv-arch-test` compliance suite
 - [ ] Compiled C program (via RISC-V GCC) run end-to-end as an integration demo
@@ -265,6 +265,6 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+Apache-2.0, see [LICENSE](LICENSE).
 
-Copyright (c) 2026 Zhiyuan (Jerry) Jiang — design, verification and documentation
+Copyright (c) 2026 Zhiyuan (Jerry) Jiang: design, verification and documentation
