@@ -38,7 +38,7 @@
 - [ASIC Implementation](#ASIC-Implementation)
 - [Repository Structure](#Repository-Structure)
 - [Roadmap](#Roadmap)
-- [Lisence](#License)
+- [Licence](#License)
 
 ---
 
