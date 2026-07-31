@@ -280,6 +280,6 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 
 ## License
 
-Apache-2.0, see [LICENSE](LICENSE).
+Apache-2.0, see [LICENSE](LICENSE)
 
 Copyright (c) 2026 Zhiyuan (Jerry) Jiang: design, verification and documentation
