@@ -27,6 +27,21 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#Overview)
+- [Architecture](#Architecture)
+- [GDS Render](#GDS-Render)
+- [Instruction Set Coverage](#Instruction-Set-Coverage)
+- [Design](#Design)
+- [Verification](#Verification)
+- [ASIC Implementation](#ASIC-Implementation)
+- [Repository Structure](#Repository-Structure)
+- [Roadmap](#Roadmap)
+- [Lisence](#License)
+
+---
+
 ## Overview
 
 Entropic R32-SC is a complete RV32I implementation built and verified from the ground up as a passion project ahead of starting Electrical Engineering at the University of Waterloo.
