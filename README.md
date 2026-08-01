@@ -37,7 +37,7 @@
 - [Verification](#Verification)
 - [ASIC Implementation](#ASIC-Implementation)
 - [Repository Structure](#Repository-Structure)
-- [Roadmap](#Roadmap)
+- [Future Plans](#Future-Plans)
 - [Licence](#License)
 
 ---
@@ -261,7 +261,7 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 
 ---
 
-## Roadmap
+## Future Plans
 
 - [ ] Pipelined successor with 5-stage: IF/ID/EX/MEM/WB, hazard detection, forwarding, and branch handling
 - [ ] Full-core differential testing against a Python-based golden ISA model (and/or Spike)
