@@ -150,7 +150,7 @@ These testbenches run constrained-random testings (10,000+ iterations) against a
 
 Failures report expected vs. actual values directly via `$fatal`.
 
-***Example part of module-level constrained random testbench generated waveform (the entire testbench is way longer with 10k+ iterations, example here zoomed in a lot and is the testbench for register file):***
+***Example of module-level constrained random testbench generated waveform (the entire testbench is way longer with 10k+ iterations, example here zoomed in a lot and is the testbench for register file):***
 
 <img width="2241" height="280" alt="Screenshot 2026-07-29 000940" src="https://github.com/user-attachments/assets/5d1c5711-613d-463d-8447-a84c75b14b00" />
 
