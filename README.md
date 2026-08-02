@@ -150,7 +150,7 @@ These testbenches run constrained-random testings (10,000+ iterations) against a
 
 Failures report expected vs. actual values directly via `$fatal`.
 
-**Example module-level constrained random testbench generated waveform (example here is register file):**
+**Example part of module-level constrained random testbench generated waveform (the entire testbench is way longer with 10k+ iterations, example here zoomed in a lot and is the testbench for register file):**
 
 <img width="2241" height="280" alt="Screenshot 2026-07-29 000940" src="https://github.com/user-attachments/assets/5d1c5711-613d-463d-8447-a84c75b14b00" />
 
@@ -161,7 +161,7 @@ The assembly program exercises every single instruction in the ISA extensively. 
 
 On failure, a self-designed error reporting system consists of unique codes (2–36) writes the error code to reg `x10` and branches the core into a halt label to stop the testbench, making failures immediately diagnosable without tediously digging through waveforms.
 
-**Top level testbench generated waveform:**
+**Successful top level testbench generated waveform:**
 
 <img width="2241" height="642" alt="Screenshot 2026-07-28 230323" src="https://github.com/user-attachments/assets/37a200f2-3f98-4eea-9fd2-425d38584c06" />
 
