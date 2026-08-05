@@ -50,7 +50,7 @@ It covers the full base instruction set: arithmetic/logic, immediates, loads/sto
 
 
 The chip features:
-- Top level module verified through directed, self-checking assembly tests
+- Top level module verified through directed, self-checking tests written in RISC-V Assembly
 - Submodule level verified through both constrained-random testing against golden models as well as directed tests for edge case testing
 - Synthesized and physically implemented through the full RTL-to-GDSII flow using [OpenLane2](https://github.com/efabless/openlane2) and the [SKY130 PDK](https://github.com/google/skywater-pdk), ran locally in a Docker + WSL environment
 
