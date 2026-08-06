@@ -60,7 +60,7 @@ The chip features:
 
 `soc_top` wraps the core (`rv32i_core`) together with separate instruction (ROM) and data memory (RAM) modules, connected via a mapping interface.
 
-**Microarchitecture diagram (zoom in if needed Github won't let me make it any bigger):**
+**Microarchitecture diagram (zoom in if needed Github won't let me make it any larger):**
 
 <img width="2883" height="1914" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/597e9e28-8283-4add-9fd4-9fb336eaa12f" />
 
