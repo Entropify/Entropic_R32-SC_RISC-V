@@ -283,3 +283,5 @@ Max slew and max cap violations remain in several timing corners (`ss`, `tt` pro
 Apache-2.0, see [LICENSE](LICENSE)
 
 Copyright (c) 2026 Zhiyuan (Jerry) Jiang: design, verification and documentation
+
+All credit for architectural and ISA specification goes to the RISC-V organization
